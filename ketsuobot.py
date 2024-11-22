@@ -11,6 +11,8 @@ def site(message):
 
 @bot.message_handler(commands=['start'])
 def main(message):
+    file = open('./bleach.jpg', 'rb')
+    bot.send_photo(message.chat.id, file)
     # Создаем таблицу, если она не существует
     conn = sqlite3.connect('forfun.db')
     sql = conn.cursor()
@@ -94,6 +96,9 @@ def list_users(call):
     finally:
         sql.close()
         conn.close()
+
+
+
 
 # Функция старт, при клике на start высылается фотка и кнопки
 # def start(message):
