@@ -2,7 +2,7 @@ import telebot
 import webbrowser
 from telebot import types
 import sqlite3
-bot = telebot.TeleBot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
+bot = telebot.TeleBot('TOKENNAME')
 name = None
 @bot.message_handler(commands=['site', 'website'])
 def site(message):
