@@ -1,6 +1,6 @@
 import telebot
 import webbrowser
-# from telebot import types
+from telebot import types
 import sqlite3
 bot = telebot.TeleBot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
 name = None
@@ -11,58 +11,89 @@ def site(message):
 
 @bot.message_handler(commands=['start'])
 def main(message):
+    # Создаем таблицу, если она не существует
     conn = sqlite3.connect('forfun.db')
     sql = conn.cursor()
-
-    sql.execute(
-        'CREATE TABLE IF NOT EXISTS users(id int auto_increment primary key, name varchar(50), pass varchar(50))')
+    sql.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            pass TEXT NOT NULL
+        )
+    ''')
     conn.commit()
     sql.close()
     conn.close()
-    bot.send_message(message.chat.id, 'Привет! Давай тебя зарегистрируем')
+
+    bot.send_message(message.chat.id, 'Привет! Давай тебя зарегистрируем. Введи свое имя:')
     bot.register_next_step_handler(message, user_name)
 
+
 def user_name(message):
-    global name
     name = message.text.strip()
-    bot.send_message(message.chat.id, 'Введи имя')
-    bot.register_next_step_handler(message, user_pass)
+    if not name:
+        bot.send_message(message.chat.id, 'Имя не может быть пустым. Попробуй снова.')
+        bot.register_next_step_handler(message, user_name)
+        return
+
+    bot.send_message(message.chat.id, 'Теперь введи пароль:')
+    bot.register_next_step_handler(message, user_pass, name)
 
 
-def user_pass(message):
+def user_pass(message, name):
     password = message.text.strip()
 
     # Проверка пароля
     if len(password) < 6:
         bot.send_message(message.chat.id, 'Пароль должен быть не менее 6 символов. Попробуй снова.')
+        bot.register_next_step_handler(message, user_pass, name)
         return
     if not any(char.isdigit() for char in password):
         bot.send_message(message.chat.id, 'Пароль должен содержать хотя бы одну цифру. Попробуй снова.')
+        bot.register_next_step_handler(message, user_pass, name)
         return
     if not any(char.isupper() for char in password):
         bot.send_message(message.chat.id, 'Пароль должен содержать хотя бы одну заглавную букву. Попробуй снова.')
+        bot.register_next_step_handler(message, user_pass, name)
         return
 
-    bot.send_message(message.chat.id, 'Пароль принят. Регистрация продолжается...')
-
-    # Подключение к базе данных
+    # Сохраняем данные в базу
     conn = sqlite3.connect('forfun.db')
     sql = conn.cursor()
-
     try:
-        # Сохраняем данные в базу
-        sql.execute(
-            f'INSERT INTO users VALUES (?, ?)', (name, password)
-        )
+        sql.execute('INSERT INTO users (name, pass) VALUES (?, ?)', (name, password))
         conn.commit()
-        bot.send_message(message.chat.id, 'Вы успешно зарегистрировались')
+
+        # Создаем кнопки
+        markup = telebot.types.InlineKeyboardMarkup()
+        markup.add(telebot.types.InlineKeyboardButton('Список пользователей', callback_data='users'))
+
+        bot.send_message(message.chat.id, 'Вы успешно зарегистрировались!', reply_markup=markup)
     except sqlite3.Error as e:
         bot.send_message(message.chat.id, f'Ошибка при регистрации: {e}')
     finally:
         sql.close()
         conn.close()
 
-    # bot.register_next_step_handler(message, user_pass)
+
+@bot.callback_query_handler(func=lambda call: call.data == 'users')
+def list_users(call):
+    # Подключение к базе данных и получение списка пользователей
+    conn = sqlite3.connect('forfun.db')
+    sql = conn.cursor()
+    try:
+        sql.execute('SELECT name FROM users')
+        users = sql.fetchall()
+        if users:
+            user_list = '\n'.join(user[0] for user in users)
+            bot.send_message(call.message.chat.id, f'Список пользователей:\n{user_list}')
+        else:
+            bot.send_message(call.message.chat.id, 'Пользователей пока нет.')
+    except sqlite3.Error as e:
+        bot.send_message(call.message.chat.id, f'Ошибка при получении списка пользователей: {e}')
+    finally:
+        sql.close()
+        conn.close()
 
 # Функция старт, при клике на start высылается фотка и кнопки
 # def start(message):
