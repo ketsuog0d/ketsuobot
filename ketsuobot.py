@@ -20,8 +20,8 @@ def get_weather(message):
     response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={APIweather}&units=metric&lang=ru')
     if response.status_code == 200:
         data = response.json()
-        weather = data['weather'][0]['description']
-        temp = data['main']['temp']
+        weather = round(data['weather'][0]['description'])
+        temp = round(data['main']['temp'])
         feels_like = data['main']['feels_like']
         bot.reply_to(message, f'Сейчас в городе {city.capitalize()}\n'
                               f'Погода {weather}\n'
