@@ -6,8 +6,8 @@ import  requests
 # import webbrowser
 # from telebot import types
 # import sqlite3
-bot = telebot.TeleBot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
-APIweather = 'bb5b8c4fd7d2b4e10e3d95887207df9c'
+bot = telebot.TeleBot('TOKEN_NAME')
+APIweather = 'TOKEN_NAME'
 # name = None
 
 @bot.message_handler(commands=['start'])
