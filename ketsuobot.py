@@ -1,107 +1,31 @@
 import telebot
-import webbrowser
-from telebot import types
-import sqlite3
+import  requests
+# import webbrowser
+# from telebot import types
+# import sqlite3
 bot = telebot.TeleBot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
-name = None
-@bot.message_handler(commands=['site', 'website'])
-def site(message):
-    webbrowser.open('https://i.postimg.cc/8cYGJr95/image.jpg')
-
+APIweather = 'bb5b8c4fd7d2b4e10e3d95887207df9c'
+# name = None
 
 @bot.message_handler(commands=['start'])
-def main(message):
-    file = open('./bleach.jpg', 'rb')
-    bot.send_photo(message.chat.id, file)
-    # Создаем таблицу, если она не существует
-    conn = sqlite3.connect('forfun.db')
-    sql = conn.cursor()
-    sql.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            pass TEXT NOT NULL
-        )
-    ''')
-    conn.commit()
-    sql.close()
-    conn.close()
+def start(message):
+    bot.send_message(message.chat.id, 'Привет, рад тебя видеть! Напиши название город')
 
-    bot.send_message(message.chat.id, 'Привет! Давай тебя зарегистрируем. Введи свое имя:')
-    bot.register_next_step_handler(message, user_name)
+@bot.message_handler(content_types=['text'])
+def get_weather(message):
+    city = message.text.strip().lower()
+    res = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={APIweather}')
+    data = 
+    bot.reply_to(message, f'Сейчас погода в: {res.json()}')
 
-
-def user_name(message):
-    name = message.text.strip()
-    if not name:
-        bot.send_message(message.chat.id, 'Имя не может быть пустым. Попробуй снова.')
-        bot.register_next_step_handler(message, user_name)
-        return
-
-    bot.send_message(message.chat.id, 'Теперь введи пароль:')
-    bot.register_next_step_handler(message, user_pass, name)
-
-
-def user_pass(message, name):
-    password = message.text.strip()
-
-    # Проверка пароля
-    if len(password) < 6:
-        bot.send_message(message.chat.id, 'Пароль должен быть не менее 6 символов. Попробуй снова.')
-        bot.register_next_step_handler(message, user_pass, name)
-        return
-    if not any(char.isdigit() for char in password):
-        bot.send_message(message.chat.id, 'Пароль должен содержать хотя бы одну цифру. Попробуй снова.')
-        bot.register_next_step_handler(message, user_pass, name)
-        return
-    if not any(char.isupper() for char in password):
-        bot.send_message(message.chat.id, 'Пароль должен содержать хотя бы одну заглавную букву. Попробуй снова.')
-        bot.register_next_step_handler(message, user_pass, name)
-        return
-
-    # Сохраняем данные в базу
-    conn = sqlite3.connect('forfun.db')
-    sql = conn.cursor()
-    try:
-        sql.execute('INSERT INTO users (name, pass) VALUES (?, ?)', (name, password))
-        conn.commit()
-
-        # Создаем кнопки
-        markup = telebot.types.InlineKeyboardMarkup()
-        markup.add(telebot.types.InlineKeyboardButton('Список пользователей', callback_data='users'))
-
-        bot.send_message(message.chat.id, 'Вы успешно зарегистрировались!', reply_markup=markup)
-    except sqlite3.Error as e:
-        bot.send_message(message.chat.id, f'Ошибка при регистрации: {e}')
-    finally:
-        sql.close()
-        conn.close()
-
-
-@bot.callback_query_handler(func=lambda call: call.data == 'users')
-def list_users(call):
-    # Подключение к базе данных и получение списка пользователей
-    conn = sqlite3.connect('forfun.db')
-    sql = conn.cursor()
-    try:
-        sql.execute('SELECT name FROM users')
-        users = sql.fetchall()
-        if users:
-            user_list = '\n'.join(user[0] for user in users)
-            bot.send_message(call.message.chat.id, f'Список пользователей:\n{user_list}')
-        else:
-            bot.send_message(call.message.chat.id, 'Пользователей пока нет.')
-    except sqlite3.Error as e:
-        bot.send_message(call.message.chat.id, f'Ошибка при получении списка пользователей: {e}')
-    finally:
-        sql.close()
-        conn.close()
-
-
-
-
-# Функция старт, при клике на start высылается фотка и кнопки
-# def start(message):
+# @bot.message_handler(commands=['site', 'website'])
+# def site(message):
+#     webbrowser.open('https://i.postimg.cc/8cYGJr95/image.jpg')
+#
+#
+# @bot.message_handler(commands=['bleach'])
+# # Функция старт, при клике на start высылается фотка и кнопки
+# def bleach(message):
 #     markup = types.ReplyKeyboardMarkup()
 #     btn1 = types.KeyboardButton('Перейти на сайт')
 #     markup.row(btn1)
@@ -111,8 +35,8 @@ def list_users(call):
 #     file = open('./bleach.jpg', 'rb')
 #     bot.send_photo(message.chat.id, file, reply_markup=markup)
 #     bot.register_next_step_handler(message, on_click)
-
-# Функция для клика на кнопки
+#
+# # Функция для клика на кнопки
 # def on_click(message):
 #     if message.text == 'Перейти на сайт':
 #         bot.send_message(message.chat.id, 'Smth is open')
@@ -122,13 +46,13 @@ def list_users(call):
 #         bot.send_message(message.chat.id, 'Smth is edited')
 #     else:
 #         bot.send_message(message.chat.id, 'Unknown')
-
-# Функция help
+#
+# # Функция help
 # @bot.message_handler(commands=['help'])
 # def help(message):
 #     bot.send_message(message.chat.id, '<b>Help</b> <em><u>information</u></em>', parse_mode='html')
-
-# Функция при отправке фото боту
+#
+# # Функция при отправке фото боту
 # @bot.message_handler(content_types=['photo'])
 # def get_photo(message):
 #     markup = types.InlineKeyboardMarkup()
@@ -138,8 +62,8 @@ def list_users(call):
 #     btn3 = types.InlineKeyboardButton('Изменить текст', callback_data='edit')
 #     markup.row(btn2, btn3)
 #     bot.reply_to(message, 'Какое красивое фото!😍', reply_markup=markup)
-
-# Функция для удаления предпоследнего смс после получения фотки
+#
+# # Функция для удаления предпоследнего смс после получения фотки
 # @bot.callback_query_handler(func=lambda callback: True)
 # def callback_message(callback):
 #     if callback.data == 'delete':
@@ -147,31 +71,92 @@ def list_users(call):
 #     elif callback.data == 'edit':
 #         bot.edit_message_text('Edit text', callback.message.chat.id, callback.message.message_id)
 
-# пустая функция для обращения к боту
-# @bot.message_handler()
-# def info(message):
-#     if message.text.lower() == 'привет':
-#         bot.send_message(message.chat.id, f'Привет, @{message.chat.username}')
-#     elif message.text.lower() == 'id':
-#         bot.reply_to(message, f'ID: {message.from_user.id}')
+# def main(message):
+#     file = open('./bleach.jpg', 'rb')
+#     bot.send_photo(message.chat.id, file)
+#     # Создаем таблицу, если она не существует
+#     conn = sqlite3.connect('forfun.db')
+#     sql = conn.cursor()
+#     sql.execute('''
+#         CREATE TABLE IF NOT EXISTS users (
+#             id INTEGER PRIMARY KEY AUTOINCREMENT,
+#             name TEXT NOT NULL,
+#             pass TEXT NOT NULL
+#         )
+#     ''')
+#     conn.commit()
+#     sql.close()
+#     conn.close()
+#
+#     bot.send_message(message.chat.id, 'Привет! Давай тебя зарегистрируем. Введи свое имя:')
+#     bot.register_next_step_handler(message, user_name)
 #
 #
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# def user_name(message):
+#     name = message.text.strip()
+#     if not name:
+#         bot.send_message(message.chat.id, 'Имя не может быть пустым. Попробуй снова.')
+#         bot.register_next_step_handler(message, user_name)
+#         return
+#
+#     bot.send_message(message.chat.id, 'Теперь введи пароль:')
+#     bot.register_next_step_handler(message, user_pass, name)
+#
+#
+# def user_pass(message, name):
+#     password = message.text.strip()
+#
+#     # Проверка пароля
+#     if len(password) < 6:
+#         bot.send_message(message.chat.id, 'Пароль должен быть не менее 6 символов. Попробуй снова.')
+#         bot.register_next_step_handler(message, user_pass, name)
+#         return
+#     if not any(char.isdigit() for char in password):
+#         bot.send_message(message.chat.id, 'Пароль должен содержать хотя бы одну цифру. Попробуй снова.')
+#         bot.register_next_step_handler(message, user_pass, name)
+#         return
+#     if not any(char.isupper() for char in password):
+#         bot.send_message(message.chat.id, 'Пароль должен содержать хотя бы одну заглавную букву. Попробуй снова.')
+#         bot.register_next_step_handler(message, user_pass, name)
+#         return
+#
+#     # Сохраняем данные в базу
+#     conn = sqlite3.connect('forfun.db')
+#     sql = conn.cursor()
+#     try:
+#         sql.execute('INSERT INTO users (name, pass) VALUES (?, ?)', (name, password))
+#         conn.commit()
+#
+#         # Создаем кнопки
+#         markup = telebot.types.InlineKeyboardMarkup()
+#         markup.add(telebot.types.InlineKeyboardButton('Список пользователей', callback_data='users'))
+#
+#         bot.send_message(message.chat.id, 'Вы успешно зарегистрировались!', reply_markup=markup)
+#     except sqlite3.Error as e:
+#         bot.send_message(message.chat.id, f'Ошибка при регистрации: {e}')
+#     finally:
+#         sql.close()
+#         conn.close()
+#
+#
+# @bot.callback_query_handler(func=lambda call: call.data == 'users')
+# def list_users(call):
+#     # Подключение к базе данных и получение списка пользователей
+#     conn = sqlite3.connect('forfun.db')
+#     sql = conn.cursor()
+#     try:
+#         sql.execute('SELECT name FROM users')
+#         users = sql.fetchall()
+#         if users:
+#             user_list = '\n'.join(user[0] for user in users)
+#             bot.send_message(call.message.chat.id, f'Список пользователей:\n{user_list}')
+#         else:
+#             bot.send_message(call.message.chat.id, 'Пользователей пока нет.')
+#     except sqlite3.Error as e:
+#         bot.send_message(call.message.chat.id, f'Ошибка при получении списка пользователей: {e}')
+#     finally:
+#         sql.close()
+#         conn.close()
 
 
 bot.polling(non_stop=True)
