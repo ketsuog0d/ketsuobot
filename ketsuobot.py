@@ -1,3 +1,6 @@
+import json
+from http.client import responses
+
 import telebot
 import  requests
 # import webbrowser
@@ -14,9 +17,24 @@ def start(message):
 @bot.message_handler(content_types=['text'])
 def get_weather(message):
     city = message.text.strip().lower()
-    res = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={APIweather}')
-    data = 
-    bot.reply_to(message, f'Сейчас погода в: {res.json()}')
+    response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={APIweather}&units=metric&lang=ru')
+    if response.status_code == 200:
+        data = response.json()
+        weather = data['weather'][0]['description']
+        temp = data['main']['temp']
+        feels_like = data['main']['feels_like']
+        bot.reply_to(message, f'Сейчас в городе {city.capitalize()}\n'
+                              f'Погода {weather}\n'
+                              f'Температура равна {temp}, по ощущениям {feels_like}°C')
+
+        image = 'sunny.jpeg' if weather > str(5.0) else 'notsunny.png'
+        file = open('./' + image, 'rb')
+        bot.send_photo(message.chat.id, file)
+    else:
+        bot.reply_to(message, 'Не удалось получить данные о погоде. Проверьте название города.')
+
+
+
 
 # @bot.message_handler(commands=['site', 'website'])
 # def site(message):
