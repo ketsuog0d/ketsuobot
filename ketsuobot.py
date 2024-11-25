@@ -21,11 +21,11 @@ def get_weather(message):
     if response.status_code == 200:
         data = response.json()
         weather = data['weather'][0]['description']
-        temp = data['main']['temp']
-        feels_like = data['main']['feels_like']
+        temp = round(data['main']['temp'])
+        feels_like = round(data['main']['feels_like'])
         bot.reply_to(message, f'Сейчас в городе {city.capitalize()}\n'
                               f'Погода {weather}\n'
-                              f'Температура равна {temp}, по ощущениям {feels_like}°C')
+                              f'Температура равна {temp}°C, по ощущениям {feels_like}°C')
 
         image = 'sunny.jpeg' if weather > str(5.0) else 'notsunny.png'
         file = open('./' + image, 'rb')
