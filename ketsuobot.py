@@ -5,16 +5,6 @@ import telebot
 # import webbrowser
 # from telebot import types
 # import sqlite3
-bot = telebot.TeleBot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
-
-
-
-
-
-
-
-
-
 # # Конвертация валюты
 # c = CurrencyConverter()
 # amount = 0
@@ -64,10 +54,6 @@ bot = telebot.TeleBot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
 #     except Exception:
 #         bot.send_message(message.chat.id, 'Что-то пошло не так. Впишите сумму корректно')
 #         bot.register_next_step_handler(message, my_currency)
-
-
-
-
 
 # name = None
 
@@ -238,5 +224,5 @@ bot = telebot.TeleBot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
 #         sql.close()
 #         conn.close()
 
-
-bot.polling(non_stop=True)
+# bot = telebot.TeleBot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
+# bot.polling(non_stop=True)
