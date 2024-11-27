@@ -1,48 +1,100 @@
-import json
-from http.client import responses
-
 import telebot
-import  requests
+from currency_converter import CurrencyConverter
+from telebot import types
+# import  requests
 # import webbrowser
 # from telebot import types
 # import sqlite3
 bot = telebot.TeleBot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
-APIweather = 'bb5b8c4fd7d2b4e10e3d95887207df9c'
-# name = None
-
+c = CurrencyConverter()
+amount = 0
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, 'Привет, рад тебя видеть! Напиши название город')
+    bot.send_message(message.chat.id, 'Добро пожаловать в бот-конвертер! Введите сумму конвертации')
+    bot.register_next_step_handler(message, summa)
 
-@bot.message_handler(content_types=['text'])
-def get_weather(message):
-    city = message.text.strip().lower()
-    response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={APIweather}&units=metric&lang=ru')
-    if response.status_code == 200:
-        data = response.json()
-        weather = data['weather'][0]['description']
-        temp = round(data['main']['temp'])
-        feels_like = round(data['main']['feels_like'])
-        bot.reply_to(message, f'Сейчас в городе {city.capitalize()}\n'
-                              f'Погода {weather}\n'
-                              f'Температура равна {temp}°C, по ощущениям {feels_like}°C')
+def summa(message):
+    global amount
+    try:
+        amount = int(message.text.strip())
+    except ValueError:
+        bot.send_message(message.chat.id, 'Неверный формат. Впишите сумму')
+        bot.register_next_step_handler(message, summa)
+        return
 
-        image = 'sunny.jpeg' if weather > str(5.0) else 'notsunny.png'
-        file = open('./' + image, 'rb')
-        bot.send_photo(message.chat.id, file)
+    if amount >= 1:
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        btn1 = types.InlineKeyboardButton('USD/EUR', callback_data='USD/EUR')
+        btn2 = types.InlineKeyboardButton('EUR/USD', callback_data='EUR/USD')
+        btn3 = types.InlineKeyboardButton('USD/GBP', callback_data='USD/EUR')
+        btn4 = types.InlineKeyboardButton('Другое значение', callback_data='ELSE')
+        markup.add(btn1, btn2, btn3, btn4)
+        bot.send_message(message.chat.id, 'Выберите валютную пару', reply_markup=markup)
     else:
-        bot.reply_to(message, 'Не удалось получить данные о погоде. Проверьте название города.')
+        bot.send_message(message.chat.id, 'Число должно быть больше 0. Впишите сумму')
+        bot.register_next_step_handler(message, summa)
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback(call):
+    if call.data != 'ELSE':
+        values = call.data.split('/')
+        res = c.convert(amount, values[0], values[1])
+        bot.send_message(call.message.chat.id, f'Получается: {round(res, 2)}, можете выполнять новый запрос')
+        bot.register_next_step_handler(call.message, summa)
+    else:
+        bot.send_message(call.message.chat.id, 'Введите пару значений через слэш')
+        bot.register_next_step_handler(call.message, my_currency)
+
+def my_currency(message):
+    try:
+        values = message.text.upper().split('/')
+        res = c.convert(amount, values[0], values[1])
+        bot.send_message(message.chat.id, f'Получается: {round(res, 2)}, можете выполнять новый запрос')
+        bot.register_next_step_handler(message, summa)
+    except Exception:
+        bot.send_message(message.chat.id, 'Что-то пошло не так. Впишите сумму корректно')
+        bot.register_next_step_handler(message, my_currency)
 
 
 
 
+
+# name = None
+
+# # Прогноз погоды
+# APIweather = 'bb5b8c4fd7d2b4e10e3d95887207df9c'
+# @bot.message_handler(commands=['start'])
+# def start(message):
+#     bot.send_message(message.chat.id, 'Привет, рад тебя видеть! Напиши название город')
+#
+# @bot.message_handler(content_types=['text'])
+# def get_weather(message):
+#     city = message.text.strip().lower()
+#     response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={APIweather}&units=metric&lang=ru')
+#     if response.status_code == 200:
+#         data = response.json()
+#         weather = data['weather'][0]['description']
+#         temp = round(data['main']['temp'])
+#         feels_like = round(data['main']['feels_like'])
+#         bot.reply_to(message, f'Сейчас в городе {city.capitalize()}\n'
+#                               f'Погода {weather}\n'
+#                               f'Температура равна {temp}°C, по ощущениям {feels_like}°C')
+#
+#         image = 'sunny.jpeg' if weather > str(5.0) else 'notsunny.png'
+#         file = open('./' + image, 'rb')
+#         bot.send_photo(message.chat.id, file)
+#     else:
+#         bot.reply_to(message, 'Не удалось получить данные о погоде. Проверьте название города.')
+
+
+
+# При команде /site или /website высылает ответ
 # @bot.message_handler(commands=['site', 'website'])
 # def site(message):
 #     webbrowser.open('https://i.postimg.cc/8cYGJr95/image.jpg')
 #
-#
+# При команде со словом высылает фотку и прикрепляет к ней кнопки
 # @bot.message_handler(commands=['bleach'])
-# # Функция старт, при клике на start высылается фотка и кнопки
 # def bleach(message):
 #     markup = types.ReplyKeyboardMarkup()
 #     btn1 = types.KeyboardButton('Перейти на сайт')
