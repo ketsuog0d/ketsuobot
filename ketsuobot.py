@@ -54,8 +54,8 @@
 #     except Exception:
 #         bot.send_message(message.chat.id, 'Что-то пошло не так. Впишите сумму корректно')
 #         bot.register_next_step_handler(message, my_currency)
-
 # name = None
+import logging
 
 # # Прогноз погоды
 # APIweather = 'bb5b8c4fd7d2b4e10e3d95887207df9c'
@@ -226,3 +226,24 @@
 
 # bot = telebot.TeleBot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
 # bot.polling(non_stop=True)
+
+
+from aiogram import Bot, Dispatcher
+import asyncio
+from aiogram.filters import CommandStart
+from aiogram.types import Message
+bot = Bot('7650145975:AAEZSo4RVCmSwZaoIK9sCTWeXDQ4pdbAfac')
+dp = Dispatcher()
+async def main():
+    await dp.start_polling(bot)
+
+@dp.message(CommandStart)
+async def cmd_start(message: Message):
+    await message.answer('Привет')
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print('Exit')
