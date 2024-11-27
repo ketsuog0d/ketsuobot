@@ -1,4 +1,4 @@
-import telebot
+# import telebot
 # from currency_converter import CurrencyConverter
 # from telebot import types
 # import  requests
